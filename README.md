@@ -2,7 +2,7 @@
 cd BoostTrack
 conda env create -f boost-track-env.yml
 conda activate boostTrack
-python multiple_object_tracking.py (Run the file (e.g. in vs code) using the Python interpreter from the Conda environment.)
+python multiple_object_tracking.py (or run the file (e.g. in vs code) using the Python interpreter from the Conda environment.)
 ```
 
 Download the weights from here: [Weights](https://drive.google.com/drive/folders/15hZcR4bW_Z9hEaXXjeWhQl_jwRKllauG)
