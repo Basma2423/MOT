@@ -1,2 +1,5 @@
 models/yolov8s.pt
 models/yolo11n.pt
+BoostTrack/external/weights/
+BoostTrack/test_tracking_results.mp4
+BoostTrack/cache/
