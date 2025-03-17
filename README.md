@@ -14,6 +14,10 @@ The directory hierarchy would be:
 |____data 
 |      |_____tracking
 |
+|____tests
+|      |_____det.txt // ground truth for the detector
+|      |_____gt.txt // ground truth for the tracker
+|
 |____MOT (this repo)
        |_____models
        |       |________yolov9c_trained.pt
