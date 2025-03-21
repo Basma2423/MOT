@@ -1,4 +1,4 @@
-models/yolov9c_trained.pt
+models/
 BoostTrack/external/weights/
 BoostTrack/test_tracking_results.mp4
 BoostTrack/cache/
