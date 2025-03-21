@@ -27,6 +27,9 @@ def load_detector(detector_type=9):
 
     elif detector_type == 9:
         model = YOLO('../models/yolov9c.pt')
+    
+    elif detector_type == 'pretrained_on_MOT20':
+        model = YOLO('../models/yolov9c_trained.pt')
 
     elif detector_type == 'ours':
         model = YOLO('../models/best.pt')
@@ -353,26 +356,29 @@ def visualize_tracking(image_folder, tracking_results, mode="train", output_vide
     cv2.destroyAllWindows()
     print(f"Visualization saved to {output_video_path}")
 
+def convert_to_mot_format(df, output_file):
+    with open(output_file, "w") as f:
+        for _, row in df.iterrows():
+            frame_id = row["frame"]
+            for obj in row["objects"]:
+                tracked_id = int(obj["tracked_id"])
+                x, y, w, h = obj["x"], obj["y"], obj["w"], obj["h"]
+                confidence = obj.get("confidence", 1.0)
+                f.write(f"{frame_id},{tracked_id},{x},{y},{w},{h},{confidence},-1,-1,-1\n")
 
-def try_training(detector_type=9):
+def evaluate_tracking_results(tracking_results_file, gt_file=None, iou_threshold=0.5):
+    results_file_csv = os.path.join(CSV_FILES_PATH, tracking_results_file)
+    tracking_results = pd.read_csv(results_file_csv, dtype=str)
+    df_tracking = tracking_results[tracking_results["objective"] == "tracking"]
+    df_tracking.loc[:, "objects"] = df_tracking["objects"].apply(json.loads)
 
-    seq_name = os.path.basename(os.path.normpath(TRAINING_DATA_PATH))
-    # If the path is like "../../data/tracking/train/02"
-    # extract "02"
+    TRACK_EVAL_PATH = os.path.join(CURRENT_PATH, 'external', 'TrackEval')
+    TRACKER_OUTPUT_PATH = os.path.join(TRACK_EVAL_PATH, 'data', 'trackers', 'mot_challenge', 'MOT20-train', 'ABN_Track', 'data')
+    output_file_path = os.path.join(TRACKER_OUTPUT_PATH, 'MOT20-01.txt')
 
-    print(f'Seq. Name: {seq_name}')
-
-    TRAINING_DATA_PATH = os.path.join(CURRENT_PATH, seq_name)
-    
-    # paths
-    gt_folder = os.path.join(TRAINING_DATA_PATH, "gt")
-    images_path = os.path.join(TRAINING_DATA_PATH, "img1")
-    output_file = f"{seq_name}_tracking_results.csv"
-
-    # track
-    print(f"Running tracking with {detector_type}...")
-    tracking_results = track_persons_in_image_sequence(images_path, output_file, detector_type)
-    
+    print(f"Converting tracking results to MOT format: {output_file_path}")
+    convert_to_mot_format(df_tracking, output_file_path)
+        
 
 def test(detector_type=9):
 
@@ -390,6 +396,8 @@ def test(detector_type=9):
     output_video_path = f"{mode}_tracking.mp4"
     visualize_tracking(images_path, tracking_results, mode=mode, output_video_path=output_video_path)
 
+    evaluate_tracking_results(output_file)
+
 
 if __name__ == "__main__":
 
@@ -405,5 +413,4 @@ if __name__ == "__main__":
         use_vt=True,
     )
     
-    # try_training(detector_type)           # train (not working totally)
     test(detector_type)                     # test and generate a submission file
