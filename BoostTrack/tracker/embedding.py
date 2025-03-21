@@ -9,7 +9,7 @@ import torchvision
 import torchreid
 import numpy as np
 
-from external.adaptors.fastreid_adaptor import FastReID
+from external.adaptors.deep_person_adaptor import DeepPersonReID
 
 """
 Implementation from Deep OC-SORT:
@@ -18,7 +18,7 @@ https://github.com/GerardMaggiolino/Deep-OC-SORT/
 
 
 class EmbeddingComputer:
-    def __init__(self, dataset, test_dataset, grid_off, max_batch=1024):
+    def __init__(self, dataset, test_dataset, grid_off, weights_path=None, max_batch=1024):
         self.model = None
         self.dataset = dataset
         self.test_dataset = test_dataset
@@ -28,6 +28,7 @@ class EmbeddingComputer:
         self.cache = {}
         self.cache_name = ""
         self.grid_off = grid_off
+        self.weights_path = weights_path
         self.max_batch = max_batch
 
         # Only used for the general ReID model (not FastReID)
@@ -163,22 +164,17 @@ class EmbeddingComputer:
         return embs
 
     def initialize_model(self):
-        if self.dataset == "mot17":
-            if self.test_dataset:
-                path = "external/weights/mot17_sbs_S50.pth"
-            else:
-                return self._get_general_model()
-        elif self.dataset == "mot20":
-            if self.test_dataset:
-                path = "external/weights/mot20_sbs_S50.pth"
-            else:
-                return self._get_general_model()
-        elif self.dataset == "dance":
-            path = "external/weights/dance_sbs_S50.pth"
-        else:
-            raise RuntimeError("Need the path for a new ReID model.")
+       
+        if not self.weights_path:
+            return self._get_general_model()
 
-        model = FastReID(path)
+        model = DeepPersonReID(
+                    model_name="osnet_ibn_x1_0",
+                    weights_path=self.weights_path,
+                    device="cuda"
+                )
+        
+        print(f"initializing model with our weights from {self.weights_path}")
         model.eval()
         model.cuda()
         model.half()
@@ -199,6 +195,9 @@ class EmbeddingComputer:
             new_state_dict[name] = v
         # load params
         model.load_state_dict(new_state_dict)
+
+        print("Loaded the general model weights from external/weights/osnet_ain_ms_d_c.pth.tar")
+
         model.eval()
         model.cuda()
         self.model = model

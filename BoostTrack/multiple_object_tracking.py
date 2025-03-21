@@ -29,7 +29,7 @@ def load_detector(detector_type=9):
         model = YOLO('../models/yolov9c.pt')
 
     elif detector_type == 'ours':
-        model = YOLO('../models/yolov9c_trained.pt')
+        model = YOLO('../models/best.pt')
 
     elif detector_type == 11:
         model = YOLO('../models/yolo11n.pt')
@@ -197,9 +197,10 @@ def generate_submission_file(output_data, original_file, output_file):
     print(f"Submission file saved successfully to {output_file}")
 
 
-def setup_tracker_settings(use_embedding=True, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
+def setup_tracker_settings(use_embedding=True, use_our_ReID=False, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
 
-    GeneralSettings.values['use_embedding'] = use_embedding         # visual embedding
+    GeneralSettings.values['use_embedding'] = use_embedding         # ReID for visual embedding
+    GeneralSettings.values['weights_path'] = use_our_ReID           # use our pretrained weights
     GeneralSettings.values['use_ecc'] = use_ecc                     # camera motion compensation
     BoostTrackPlusPlusSettings.values['use_rich_s'] = use_rich_s    # use rich similarity (not just IoU)
     BoostTrackPlusPlusSettings.values['use_sb'] = use_sb            # use soft detection confidence boost
@@ -392,15 +393,17 @@ def test(detector_type=9):
 
 if __name__ == "__main__":
 
+    detector_type = 'ours'
+    use_our_ReID = False
+
     setup_tracker_settings(
         use_embedding=True,
+        use_our_ReID=use_our_ReID,
         use_ecc=True,
         use_rich_s=True,
         use_sb=True,
         use_vt=True,
     )
-
-    detector_type = 'ours'    # YOLO: 8, 9, 11
     
     # try_training(detector_type)           # train (not working totally)
     test(detector_type)                     # test and generate a submission file
