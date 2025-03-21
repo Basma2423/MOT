@@ -10,15 +10,15 @@ import torchreid
 import numpy as np
 
 from external.adaptors.deep_person_adaptor import DeepPersonReID
+from external.adaptors.fastreid_adaptor import FastReID
 
 """
 Implementation from Deep OC-SORT:
 https://github.com/GerardMaggiolino/Deep-OC-SORT/
 """
 
-
 class EmbeddingComputer:
-    def __init__(self, dataset, test_dataset, grid_off, weights_path=None, max_batch=1024):
+    def __init__(self, dataset, test_dataset, grid_off, reid_type='fastreid', weights_path=None, max_batch=1024):
         self.model = None
         self.dataset = dataset
         self.test_dataset = test_dataset
@@ -28,6 +28,7 @@ class EmbeddingComputer:
         self.cache = {}
         self.cache_name = ""
         self.grid_off = grid_off
+        self.reid_type = reid_type
         self.weights_path = weights_path
         self.max_batch = max_batch
 
@@ -165,24 +166,39 @@ class EmbeddingComputer:
 
     def initialize_model(self):
 
-        if self.weights_path:
+        if self.reid_type == "fastreid":
+            path = 'external/weights/mot17_sbs_S50.pth'
+            print(f"Loading FastReID model from {path}")
+            model = FastReID(path)
+            model.eval()
+            model.cuda()
+            model.half()
+            self.model = model
+
+
+        elif self.reid_type == "our_trained_osnet":
             model_name = "osnet_ibn_x1_0"
             weights_path = self.weights_path
+            print(f"Loading our trained OSNet model from {weights_path}")
             num_classes = 2011
+            self.get_osnet_model(model_name, weights_path, num_classes)
+            return
+
         else:
             # model_name = "osnet_ain_x1_0"
             # weights_path = "external/weights/osnet_ain_ms_d_c.pth.tar"
+            # print(f"Loading OSNet model from {weights_path}")
             # num_classes = 2510
 
             model_name = "osnet_ibn_x1_0"
             weights_path = "external/weights/osnet_ibn_ms_d_m.pth.tar"
+            print(f"Loading OSNet model from {weights_path}")
             num_classes = 2494
+            self.get_osnet_model(model_name, weights_path, num_classes)
+            return
 
-        print(f"Loading {model_name} model weights from {weights_path}")
         
-        return self._get_model(model_name, weights_path, num_classes)
-
-    def _get_model(self, model_name, weights_path, num_classes=2510):
+    def get_osnet_model(self, model_name, weights_path, num_classes=2510):
 
         model = torchreid.models.build_model(name=model_name, num_classes=num_classes, loss="softmax", pretrained=False)
         sd = torch.load(weights_path)["state_dict"]

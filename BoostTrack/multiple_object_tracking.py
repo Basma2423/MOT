@@ -200,10 +200,11 @@ def generate_submission_file(output_data, original_file, output_file):
     print(f"Submission file saved successfully to {output_file}")
 
 
-def setup_tracker_settings(use_embedding=True, ReID_path=None, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
+def setup_tracker_settings(use_embedding=True, reid_type='fastreid', reid_path=None, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
 
-    GeneralSettings.values['use_embedding'] = use_embedding         # ReID for visual embedding
-    GeneralSettings.values['ReID_path'] = ReID_path                 # use our pretrained weights
+    GeneralSettings.values['use_embedding'] = use_embedding         # reid for visual embedding
+    GeneralSettings.values['reid_type'] = reid_type                 # "fastreid" or "our_trained_osnet" or None for generalized osnet
+    GeneralSettings.values['reid_path'] = reid_path                 # use our pretrained weights
     GeneralSettings.values['use_ecc'] = use_ecc                     # camera motion compensation
     BoostTrackPlusPlusSettings.values['use_rich_s'] = use_rich_s    # use rich similarity (not just IoU)
     BoostTrackPlusPlusSettings.values['use_sb'] = use_sb            # use soft detection confidence boost
@@ -401,14 +402,16 @@ def test(detector_type=9):
 
 if __name__ == "__main__":
 
-    detector_type = 'ours'
+    detector_type = 'ours'                               # 8, 9, 11, 'ours', 'pretrained_on_MOT20'
+    reid_type =  'fastreid'                             # 'fastreid', 'our_trained_osnet',  None for generalized osnet
 
-    # ReID_path = None                                  # the generalized models by torch reid will be used
-    ReID_path = 'external/weights/model.pth.tar-5'      # the fine_tuned ReID model will be used
+    # reid_path = None                                  # the generalized models by torch reid will be used
+    reid_path = 'external/weights/model.pth.tar-5'      # the fine_tuned reid model will be used
 
     setup_tracker_settings(
         use_embedding=True,
-        ReID_path=ReID_path,
+        reid_type=reid_type,
+        reid_path=reid_path,
         use_ecc=True,
         use_rich_s=True,
         use_sb=True,
