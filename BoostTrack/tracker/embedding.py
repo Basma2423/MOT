@@ -164,40 +164,33 @@ class EmbeddingComputer:
         return embs
 
     def initialize_model(self):
-       
-        if not self.weights_path:
-            return self._get_general_model()
 
-        model = DeepPersonReID(
-                    model_name="osnet_ibn_x1_0",
-                    weights_path=self.weights_path,
-                    device="cuda"
-                )
+        if self.weights_path:
+            model_name = "osnet_ibn_x1_0"
+            weights_path = self.weights_path
+            num_classes = 2011
+        else:
+            # model_name = "osnet_ain_x1_0"
+            # weights_path = "external/weights/osnet_ain_ms_d_c.pth.tar"
+            # num_classes = 2510
+
+            model_name = "osnet_ibn_x1_0"
+            weights_path = "external/weights/osnet_ibn_ms_d_m.pth.tar"
+            num_classes = 2494
+
+        print(f"Loading {model_name} model weights from {weights_path}")
         
-        print(f"initializing model with our weights from {self.weights_path}")
-        model.eval()
-        model.cuda()
-        model.half()
-        self.model = model
+        return self._get_model(model_name, weights_path, num_classes)
 
-    def _get_general_model(self):
-        """Used for the half-val for MOT17/20.
+    def _get_model(self, model_name, weights_path, num_classes=2510):
 
-        The MOT17/20 SBS models are trained over the half-val we
-        evaluate on as well. Instead we use a different model for
-        validation.
-        """
-        model = torchreid.models.build_model(name="osnet_ain_x1_0", num_classes=2510, loss="softmax", pretrained=False)
-        sd = torch.load("external/weights/osnet_ain_ms_d_c.pth.tar")["state_dict"]
-        new_state_dict = OrderedDict()
-        for k, v in sd.items():
-            name = k[7:]  # remove `module.`
-            new_state_dict[name] = v
-        # load params
+        model = torchreid.models.build_model(name=model_name, num_classes=num_classes, loss="softmax", pretrained=False)
+        sd = torch.load(weights_path)["state_dict"]
+        new_state_dict = OrderedDict((k[7:], v) for k, v in sd.items())  # remove `module.`
         model.load_state_dict(new_state_dict)
 
-        print("Loaded the general model weights from external/weights/osnet_ain_ms_d_c.pth.tar")
-
+        print(f"Loaded {model_name} model weights from {weights_path}")
+        
         model.eval()
         model.cuda()
         self.model = model
