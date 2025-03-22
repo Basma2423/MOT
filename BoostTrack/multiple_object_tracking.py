@@ -403,10 +403,12 @@ def test(detector_type=9):
 if __name__ == "__main__":
 
     detector_type = 'ours'                               # 8, 9, 11, 'ours', 'pretrained_on_MOT20'
-    reid_type =  'fastreid'                             # 'fastreid', 'our_trained_osnet',  None for generalized osnet
+    reid_type =  'our_trained_osnet'                             # 'fastreid', 'our_trained_osnet',  None for generalized osnet
 
     # reid_path = None                                  # the generalized models by torch reid will be used
-    reid_path = 'external/weights/model.pth.tar-5'      # the fine_tuned reid model will be used
+    # reid_path = 'external/weights/model.pth.tar-5'      # the fine_tuned reid model will be used
+    # reid_path = '/home/floubsy2423/Downloads/model_final.pth'
+    reid_path = '/home/floubsy2423/Downloads/osnet_ibn_mot20.pth'
 
     setup_tracker_settings(
         use_embedding=True,

@@ -1,5 +1,4 @@
 models/
-BoostTrack/external/weights/
 BoostTrack/test_tracking_results.mp4
 BoostTrack/cache/
 data/

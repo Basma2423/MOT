@@ -167,7 +167,7 @@ class EmbeddingComputer:
     def initialize_model(self):
 
         if self.reid_type == "fastreid":
-            path = 'external/weights/mot17_sbs_S50.pth'
+            path = self.weights_path if self.weights_path is not None else "external/weights/mot17_sbs_S50.pth"
             print(f"Loading FastReID model from {path}")
             model = FastReID(path)
             model.eval()

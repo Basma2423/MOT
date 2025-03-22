@@ -1,6 +1,7 @@
 
-1. Download the weights from here: [weights](https://drive.google.com/drive/folders/15hZcR4bW_Z9hEaXXjeWhQl_jwRKllauG)
-and place them in `BoostTrack/external/weights/`
+1. Download the weights from here: [weights](https://drive.google.com/drive/folders/1vYcMvm2VaHtYFJ_rtpR-rSmdG8MUGdFp?usp=sharing)
+Place the models at `Detector` in `models/`
+Place the `ReID` weights in `BoostTrack/external/weights/`
 
 2. Run the Tracker
 ```
@@ -31,13 +32,13 @@ The directory hierarchy would be:
 |
 |____MOT (this repo)
        |_____models
-       |       |________yolov9c_trained.pt
-       |       |________best.pt (fine-tuned on multiple datasets)
+       |       |________yolov9c_trained.pt (download from drive and place here)
+       |       |________best.pt (fine-tuned on multiple datasets) (download from drive and place here)
        |
        |_____BoostTrack
                |________ multiple_object_tracking.py (main file)
                |________external
-               |             |_______weights
+               |             |_______weights (download from drive and place them here)
                |             |
                |             |-------CSV_files (contains the generated result)
                |             |
