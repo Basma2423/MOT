@@ -180,7 +180,7 @@ class EmbeddingComputer:
             model_name = "osnet_ibn_x1_0"
             weights_path = self.weights_path
             print(f"Loading our trained OSNet model from {weights_path}")
-            num_classes = 2011
+            num_classes = 2012
             self.get_osnet_model(model_name, weights_path, num_classes)
             return
 
@@ -200,18 +200,28 @@ class EmbeddingComputer:
         
     def get_osnet_model(self, model_name, weights_path, num_classes=2510):
 
-        model = torchreid.models.build_model(name=model_name, num_classes=num_classes, loss="softmax", pretrained=False)
-        sd = torch.load(weights_path)["state_dict"]
-        new_state_dict = OrderedDict((k[7:], v) for k, v in sd.items())  # remove `module.`
-        model.load_state_dict(new_state_dict)
+            model = torchreid.models.build_model(name=model_name, num_classes=num_classes, loss="softmax", pretrained=False)
+            checkpoint = torch.load(weights_path)
+            
+            if isinstance(checkpoint, dict) and 'state_dict' in checkpoint:
+                sd = checkpoint["state_dict"]
+            else:
+                sd = checkpoint
+            
+            if any(k.startswith('module.') for k in sd.keys()):
+                new_state_dict = OrderedDict((k[7:], v) for k, v in sd.items())
+            else:
+                new_state_dict = sd
+            
+            model.load_state_dict(new_state_dict, strict=False)
 
-        print(f"Loaded {model_name} model weights from {weights_path}")
-        
-        model.eval()
-        model.cuda()
-        self.model = model
-        self.crop_size = (128, 256)
-        self.normalize = True
+            print(f"Loaded {model_name} model weights from {weights_path}")
+            
+            model.eval()
+            model.cuda()
+            self.model = model
+            self.crop_size = (128, 256)
+            self.normalize = True
 
     def dump_cache(self):
         if self.cache_name:

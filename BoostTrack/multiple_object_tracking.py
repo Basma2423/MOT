@@ -177,27 +177,41 @@ def track_persons_in_image_sequence(image_folder, output_file, detector_type=9, 
     return output_data
 
 
+
 def generate_submission_file(output_data, original_file, output_file):
-
     df_original = pd.read_csv(original_file, dtype=str)
-
-    # instructions on the competition website
-    # convert the 'objects' column from string to its literal structure
-    df_original['objects'] = df_original['objects'].apply(lambda x: json.loads(x.replace("'", '"')) if x not in ["[]", "{}"] else x)
 
     # frame → objects
     tracking_data = {int(item["Frame"]): item["Objects"] for item in output_data}
 
     for i in range(len(df_original)):
-        frame = int(float(df_original.loc[i, "frame"]))  # for matching
+        frame = int(float(df_original.loc[i, "frame"]))
 
-        if frame in tracking_data:  # update tracking rows only
+        if frame in tracking_data:
             df_original.at[i, "objects"] = json.dumps(tracking_data[frame], separators=(',', ':'))
             df_original.at[i, "objective"] = "tracking"
 
     df_original.to_csv(output_file, index=False, encoding='utf-8')
 
     print(f"Submission file saved successfully to {output_file}")
+
+def merge_results(submission_file, tracking_csv_file, face_reid_csv_file, output_csv_file):
+    df_submission = pd.read_csv(submission_file, dtype=str)
+    df_tracking = pd.read_csv(tracking_csv_file, dtype=str)
+    df_face_reid = pd.read_csv(face_reid_csv_file, dtype=str)
+    
+    assert len(df_submission) == len(df_tracking) == len(df_face_reid), "CSV files must have the same length"
+    
+    df_merged = df_submission.copy()
+    
+    df_merged.loc[df_tracking['objective'] == 'tracking', 'objects'] = df_tracking['objects']
+    df_merged.loc[df_tracking['objective'] == 'tracking', 'objective'] = 'tracking'
+    
+    df_merged.loc[df_face_reid['objective'] == 'face_reid', 'objects'] = df_face_reid['objects']
+    df_merged.loc[df_face_reid['objective'] == 'face_reid', 'objective'] = 'face_reid'
+    
+    df_merged.to_csv(output_csv_file, index=False, encoding='utf-8')
+    print(f"Merged file saved successfully to {output_csv_file}")
 
 
 def setup_tracker_settings(use_embedding=True, reid_type='fastreid', reid_path=None, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
@@ -384,7 +398,7 @@ def evaluate_tracking_results(tracking_results_file, gt_file=None, iou_threshold
 
 def test(detector_type=9):
 
-    # taths
+    # paths
     mode = "test"
     images_path = os.path.join(TEST_DATA_PATH, "img1")
     output_file = f"{mode}_tracking_results.csv"
@@ -402,13 +416,18 @@ def test(detector_type=9):
 
 if __name__ == "__main__":
 
-    detector_type = 'ours'                               # 8, 9, 11, 'ours', 'pretrained_on_MOT20'
+    detector_type = 'pretrained_on_MOT20'               # 8, 9, 11, 'ours', 'pretrained_on_MOT20'
     reid_type =  'our_trained_osnet'                             # 'fastreid', 'our_trained_osnet',  None for generalized osnet
 
-    # reid_path = None                                  # the generalized models by torch reid will be used
-    # reid_path = 'external/weights/model.pth.tar-5'      # the fine_tuned reid model will be used
+    # general osnet
+    # reid_path = None                                      # the generalized models by torch reid will be used
+    
+    # trained osnet
+    reid_path = '/home/floubsy2423/Downloads/osnet_ibn_mot20_10_epochs.pth'
+    
+    # fastreid
     # reid_path = '/home/floubsy2423/Downloads/model_final.pth'
-    reid_path = '/home/floubsy2423/Downloads/osnet_ibn_mot20.pth'
+
 
     setup_tracker_settings(
         use_embedding=True,
@@ -421,3 +440,10 @@ if __name__ == "__main__":
     )
     
     test(detector_type)                     # test and generate a submission file
+
+    submission_file = os.path.join(CSV_FILES_PATH, "submission_file.csv")
+    tracking_csv_file = os.path.join(CSV_FILES_PATH, "test_tracking_results.csv")
+    face_reid_csv_file = os.path.join(CSV_FILES_PATH, "my_submission.csv")
+    output_csv_file = os.path.join(CSV_FILES_PATH, "final_submission.csv")
+
+    merge_results(submission_file, tracking_csv_file, face_reid_csv_file, output_csv_file)
