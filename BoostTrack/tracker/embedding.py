@@ -18,7 +18,7 @@ https://github.com/GerardMaggiolino/Deep-OC-SORT/
 """
 
 class EmbeddingComputer:
-    def __init__(self, dataset, test_dataset, grid_off, reid_type='fastreid', weights_path=None, max_batch=1024):
+    def __init__(self, dataset, test_dataset, grid_off, reid_type='fastreid', num_classes=2011, weights_path=None, max_batch=1024):
         self.model = None
         self.dataset = dataset
         self.test_dataset = test_dataset
@@ -29,6 +29,7 @@ class EmbeddingComputer:
         self.cache_name = ""
         self.grid_off = grid_off
         self.reid_type = reid_type
+        self.num_classes = num_classes
         self.weights_path = weights_path
         self.max_batch = max_batch
 
@@ -180,7 +181,7 @@ class EmbeddingComputer:
             model_name = "osnet_ibn_x1_0"
             weights_path = self.weights_path
             print(f"Loading our trained OSNet model from {weights_path}")
-            num_classes = 2012
+            num_classes = self.num_classes
             self.get_osnet_model(model_name, weights_path, num_classes)
             return
 
