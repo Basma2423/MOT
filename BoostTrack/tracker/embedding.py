@@ -217,6 +217,7 @@ class EmbeddingComputer:
             model.load_state_dict(new_state_dict, strict=False)
 
             print(f"Loaded {model_name} model weights from {weights_path}")
+            print(f"With number of classes: {num_classes}")
             
             model.eval()
             model.cuda()

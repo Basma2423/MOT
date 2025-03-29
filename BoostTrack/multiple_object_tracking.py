@@ -111,18 +111,18 @@ def process_frame(frame, frame_count, detector, tracker, output_data, detector_t
         'Objective': 'tracking'
     })
     
-    # visualize
-    visualization_frame = frame.copy()
-    for obj in tracked_objects:
-        x, y, w, h = obj['x'], obj['y'], obj['w'], obj['h']
-        track_id = obj['tracked_id']
-        cv2.rectangle(visualization_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(visualization_frame, f"ID: {int(track_id)}", (x, y-10), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+    # # visualize
+    # visualization_frame = frame.copy()
+    # for obj in tracked_objects:
+    #     x, y, w, h = obj['x'], obj['y'], obj['w'], obj['h']
+    #     track_id = obj['tracked_id']
+    #     cv2.rectangle(visualization_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    #     cv2.putText(visualization_frame, f"ID: {int(track_id)}", (x, y-10), 
+    #                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     
-    # display
-    cv2.imshow('Tracking', visualization_frame)
-    cv2.waitKey(1)
+    # # display
+    # cv2.imshow('Tracking', visualization_frame)
+    # cv2.waitKey(1)
     
     return process_time
 
@@ -214,10 +214,11 @@ def merge_results(submission_file, tracking_csv_file, face_reid_csv_file, output
     print(f"Merged file saved successfully to {output_csv_file}")
 
 
-def setup_tracker_settings(use_embedding=True, reid_type='fastreid', reid_path=None, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
+def setup_tracker_settings(use_embedding=True, reid_type='fastreid', num_classes=2012, reid_path=None, use_ecc=True, use_rich_s=True, use_sb=True, use_vt=True):
 
     GeneralSettings.values['use_embedding'] = use_embedding         # reid for visual embedding
     GeneralSettings.values['reid_type'] = reid_type                 # "fastreid" or "our_trained_osnet" or None for generalized osnet
+    GeneralSettings.values['num_classes'] = num_classes             # number of classes for reid
     GeneralSettings.values['reid_path'] = reid_path                 # use our pretrained weights
     GeneralSettings.values['use_ecc'] = use_ecc                     # camera motion compensation
     BoostTrackPlusPlusSettings.values['use_rich_s'] = use_rich_s    # use rich similarity (not just IoU)
@@ -408,9 +409,9 @@ def test(detector_type=9):
     tracking_results = track_persons_in_image_sequence(images_path, output_file, detector_type, mode=mode)
 
     # visualize results
-    print("Generating visualization...")
-    output_video_path = f"{mode}_tracking.mp4"
-    visualize_tracking(images_path, tracking_results, mode=mode, output_video_path=output_video_path)
+    # print("Generating visualization...")
+    # output_video_path = f"{mode}_tracking.mp4"
+    # visualize_tracking(images_path, tracking_results, mode=mode, output_video_path=output_video_path)
 
     evaluate_tracking_results(output_file)
 
@@ -423,7 +424,8 @@ if __name__ == "__main__":
     # reid_path = None                                      # the generalized models by torch reid will be used
     
     # trained osnet
-    reid_path = '/home/floubsy2423/Downloads/osnet_ibn_mot20_10_epochs.pth'
+    reid_path = '/home/floubsy2423/Downloads/model.pth'
+    osnet_num_classes = 2011
     
     # fastreid
     # reid_path = '/home/floubsy2423/Downloads/model_final.pth'
@@ -432,6 +434,7 @@ if __name__ == "__main__":
     setup_tracker_settings(
         use_embedding=True,
         reid_type=reid_type,
+        num_classes=osnet_num_classes,
         reid_path=reid_path,
         use_ecc=True,
         use_rich_s=True,
@@ -442,8 +445,8 @@ if __name__ == "__main__":
     test(detector_type)                     # test and generate a submission file
 
     submission_file = os.path.join(CSV_FILES_PATH, "submission_file.csv")
-    tracking_csv_file = os.path.join(CSV_FILES_PATH, "test_tracking_results.csv")
-    face_reid_csv_file = os.path.join(CSV_FILES_PATH, "my_submission.csv")
+    tracking_csv_file = os.path.join(CSV_FILES_PATH, "tracking.csv")
+    face_reid_csv_file = os.path.join(CSV_FILES_PATH, "fast_reid.csv")
     output_csv_file = os.path.join(CSV_FILES_PATH, "final_submission.csv")
 
     merge_results(submission_file, tracking_csv_file, face_reid_csv_file, output_csv_file)
