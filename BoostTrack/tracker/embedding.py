@@ -201,6 +201,8 @@ class EmbeddingComputer:
         
     def get_osnet_model(self, model_name, weights_path, num_classes=2510):
 
+            print(f"Number of classes: {num_classes}")
+
             model = torchreid.models.build_model(name=model_name, num_classes=num_classes, loss="softmax", pretrained=False)
             checkpoint = torch.load(weights_path)
             
@@ -217,7 +219,6 @@ class EmbeddingComputer:
             model.load_state_dict(new_state_dict, strict=False)
 
             print(f"Loaded {model_name} model weights from {weights_path}")
-            print(f"With number of classes: {num_classes}")
             
             model.eval()
             model.cuda()
